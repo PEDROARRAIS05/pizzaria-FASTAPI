@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bella Massa • Pizzaria Artesanal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav id="navbar">
+  <a href="#" class="logo">Bella<span class="logo-accent">Massa</span></a>
+  <div class="nav-actions" id="nav-actions">
+    <button class="btn btn-ghost" onclick="openModal('login')">Entrar</button>
+    <button class="btn btn-primary" onclick="openModal('register')">Criar conta</button>
+  </div>
+</nav>
+
+<!-- ── LANDING ── -->
+<div id="landing">
+
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-circle"></div>
+    <div class="hero-content">
+      <div class="hero-badge">🔥 Massa fermentada 72h</div>
+      <h1 class="hero-title">Pizza do<br><em class="hero-title-em">jeito certo.</em></h1>
+      <p class="hero-desc">Ingredientes selecionados, forno a lenha e amor em cada fatia. Monte seu pedido e receba fresquinho.</p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" onclick="openModal('register')">Pedir agora</button>
+        <a href="#menu" class="btn btn-ghost">Ver cardápio</a>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section id="menu" class="section">
+    <p class="section-label">Cardápio</p>
+    <h2 class="section-title">Nossas <em class="section-title-em">especialidades</em></h2>
+    <div class="menu-grid" id="menu-grid"></div>
+  </section>
+
+</div>
+
+<!-- ── AUTH MODAL ── -->
+<div class="overlay" id="auth-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 class="modal-title" id="modal-title">Bem-vindo de volta</h2>
+    <p class="modal-sub"  id="modal-sub">Entre na sua conta para fazer pedidos</p>
+
+    <div class="tab-row">
+      <button class="tab active" id="tab-login"    onclick="switchTab('login')">Entrar</button>
+      <button class="tab"        id="tab-register" onclick="switchTab('register')">Criar conta</button>
+    </div>
+
+    <div class="form-error" id="form-error"></div>
+
+    <div id="form-login">
+      <div class="field"><label>E-mail</label><input type="email"    id="login-email" placeholder="seu@email.com"></div>
+      <div class="field"><label>Senha</label> <input type="password" id="login-pass"  placeholder="••••••••"></div>
+      <button class="btn btn-primary btn-full" id="login-btn" onclick="doLogin()">Entrar na conta</button>
+    </div>
+
+    <div id="form-register" class="hidden">
+      <div class="field"><label>Nome</label>  <input type="text"     id="reg-name"  placeholder="Seu nome completo"></div>
+      <div class="field"><label>E-mail</label><input type="email"    id="reg-email" placeholder="seu@email.com"></div>
+      <div class="field"><label>Senha</label> <input type="password" id="reg-pass"  placeholder="Mínimo 6 caracteres"></div>
+      <button class="btn btn-primary btn-full" id="register-btn" onclick="doRegister()">Criar minha conta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP (logado) ── -->
+<div id="app">
+
+  <div class="app-header">
+    <div class="welcome-text">
+      <h2 id="welcome-name">Olá!</h2>
+      <p>O que vai pedir hoje?</p>
+    </div>
+    <div class="app-tabs">
+      <button class="app-tab active" onclick="showAppTab('new-order')">Novo Pedido</button>
+      <button class="app-tab"        onclick="showAppTab('my-orders')">Meus Pedidos</button>
+    </div>
+  </div>
+
+  <div class="app-content">
+
+    <!-- Novo Pedido -->
+    <div id="tab-new-order">
+      <div class="api-warning">
+        <span>⚡</span>
+        <span>Certifique-se de que a API está rodando em <code>http://127.0.0.1:8000</code> com <strong>uvicorn main:app --reload</strong></span>
+      </div>
+      <div class="order-builder">
+
+        <div class="panel">
+          <div class="panel-title"><span>🍕</span> Monte sua pizza</div>
+
+          <p class="hint-label">Escolha o sabor</p>
+          <div class="pizza-select-grid" id="pizza-select-grid"></div>
+
+          <p class="hint-label">Tamanho</p>
+          <div class="size-row" id="size-row"></div>
+
+          <p class="hint-label">Quantidade</p>
+          <div class="qty-row">
+            <button class="qty-btn" onclick="changeQty(-1)">−</button>
+            <span class="qty-display" id="qty-display">1</span>
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
+          </div>
+
+          <button class="btn btn-primary btn-full" onclick="addToCart()">Adicionar ao pedido</button>
+        </div>
+
+        <div class="panel panel-sticky">
+          <div class="panel-title"><span>🛒</span> Resumo do pedido</div>
+
+          <div class="cart-items" id="cart-items">
+            <div class="cart-empty">
+              <div class="cart-empty-icon">🛒</div>
+              <p class="cart-empty-text">Sua pizza ainda não foi escolhida…</p>
+            </div>
+          </div>
+
+          <div class="cart-total cart-total-hidden" id="cart-total">
+            <span>Total</span>
+            <span class="cart-total-price" id="cart-total-price">R$ 0,00</span>
+          </div>
+
+          <button class="btn btn-success btn-full" id="confirm-order-btn" onclick="confirmOrder()" disabled>
+            Confirmar pedido
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Meus Pedidos -->
+    <div id="tab-my-orders" class="hidden">
+      <div id="orders-container"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════
+const API = 'http://127.0.0.1:8000';
+
+// ═══════════════════════════════════════
+//  CARDÁPIO
+// ═══════════════════════════════════════
+const PIZZAS = [
+  { id:'margherita',   name:'Marguerita',     emoji:'🍕', desc:'Molho de tomate, mozzarella fresca, manjericão',        basePrice:32 },
+  { id:'calabresa',    name:'Calabresa',      emoji:'🧅', desc:'Molho de tomate, mozzarella, calabresa, cebola',        basePrice:36 },
+  { id:'quatro_quei',  name:'4 Queijos',      emoji:'🧀', desc:'Mozzarella, gorgonzola, parmesão, catupiry',            basePrice:44 },
+  { id:'frango_cata',  name:'Frango Catupiry', emoji:'🍗', desc:'Frango desfiado, catupiry cremoso, azeitona',           basePrice:40 },
+  { id:'portuguesa',   name:'Portuguesa',     emoji:'🥚', desc:'Presunto, ovo, cebola, azeitona, pimentão',             basePrice:38 },
+  { id:'napolitana',   name:'Napolitana',     emoji:'🍅', desc:'Tomate fresco, alho, manjericão, azeite',               basePrice:34 },
+];
+
+const SIZES = [
+  { id:'PEQUENA', name:'Pequena', desc:'25cm · 4 fatias', multiplier:1.0  },
+  { id:'MEDIA',   name:'Média',   desc:'30cm · 6 fatias', multiplier:1.3  },
+  { id:'GRANDE',  name:'Grande',  desc:'35cm · 8 fatias', multiplier:1.65 },
+];
+
+// ═══════════════════════════════════════
+//  ESTADO
+// ═══════════════════════════════════════
+let token       = localStorage.getItem('Bella_Massa_token') || null;
+let currentUser = JSON.parse(localStorage.getItem('Bella_Massa_user') || 'null');
+let cart        = [];
+let selectedPizza = PIZZAS[0];
+let selectedSize  = SIZES[1];
+let qty = 1;
+let demoOrderId = 100;
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderMenuGrid();
+  renderPizzaSelect();
+  renderSizes();
+  if (token && currentUser) enterApp();
+});
+
+// ═══════════════════════════════════════
+//  LANDING: MENU
+// ═══════════════════════════════════════
+function renderMenuGrid() {
+  document.getElementById('menu-grid').innerHTML = PIZZAS.map(p => `
+    <div class="pizza-card">
+      <div class="pizza-emoji">${p.emoji}</div>
+      <div class="pizza-info">
+        <div class="pizza-name">${p.name}</div>
+        <div class="pizza-desc">${p.desc}</div>
+        <div class="pizza-footer">
+          <div class="pizza-price">A partir de R$ ${p.basePrice.toFixed(2).replace('.',',')}</div>
+          <span class="size-tag">3 tamanhos</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+//  APP: SELEÇÃO DE PIZZA
+// ═══════════════════════════════════════
+function renderPizzaSelect() {
+  document.getElementById('pizza-select-grid').innerHTML = PIZZAS.map(p => `
+    <div class="pizza-option ${p.id===selectedPizza.id?'selected':''}" onclick="selectPizza('${p.id}')">
+      <div class="emo">${p.emoji}</div>
+      <div class="opt-name">${p.name}</div>
+    </div>`).join('');
+}
+
+function selectPizza(id) {
+  selectedPizza = PIZZAS.find(p=>p.id===id);
+  renderPizzaSelect();
+  renderSizes();
+}
+
+function renderSizes() {
+  document.getElementById('size-row').innerHTML = SIZES.map(s => {
+    const price = (selectedPizza.basePrice * s.multiplier).toFixed(2).replace('.',',');
+    return `
+      <div class="size-btn ${s.id===selectedSize.id?'selected':''}" onclick="selectSize('${s.id}')">
+        <span class="size-lbl">${s.desc}</span>
+        <span class="size-name">${s.name}</span>
+        <span class="size-price">R$ ${price}</span>
+      </div>`;
+  }).join('');
+}
+
+function selectSize(id) {
+  selectedSize = SIZES.find(s=>s.id===id);
+  renderSizes();
+}
+
+function changeQty(delta) {
+  qty = Math.max(1, Math.min(10, qty+delta));
+  document.getElementById('qty-display').textContent = qty;
+}
+
+// ═══════════════════════════════════════
+//  CARRINHO
+// ═══════════════════════════════════════
+function addToCart() {
+  const price = selectedPizza.basePrice * selectedSize.multiplier;
+  cart.push({ pizza:{...selectedPizza}, size:{...selectedSize}, qty, price, total: price*qty });
+  renderCart();
+  toast('success', `${selectedPizza.emoji} ${selectedPizza.name} adicionada!`);
+}
+
+function removeFromCart(idx) { cart.splice(idx,1); renderCart(); }
+
+function renderCart() {
+  const el         = document.getElementById('cart-items');
+  const totalEl    = document.getElementById('cart-total');
+  const totalPrice = document.getElementById('cart-total-price');
+  const confirmBtn = document.getElementById('confirm-order-btn');
+
+  if (!cart.length) {
+    el.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div><p class="cart-empty-text">Sua pizza ainda não foi escolhida…</p></div>`;
+    totalEl.className = 'cart-total cart-total-hidden';
+    confirmBtn.disabled = true;
+    return;
+  }
+
+  el.innerHTML = cart.map((item,i) => `
+    <div class="cart-item">
+      <span class="cart-item-emo">${item.pizza.emoji}</span>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.pizza.name}</div>
+        <div class="cart-item-detail">${item.size.name} · ${item.qty}x</div>
+      </div>
+      <span class="cart-item-price">R$ ${item.total.toFixed(2).replace('.',',')}</span>
+      <button class="cart-item-remove" onclick="removeFromCart(${i})">🗑</button>
+    </div>`).join('');
+
+  const total = cart.reduce((s,i)=>s+i.total,0);
+  totalEl.className = 'cart-total';
+  totalPrice.textContent = `R$ ${total.toFixed(2).replace('.',',')}`;
+  confirmBtn.disabled = false;
+}
+
+// ═══════════════════════════════════════
+//  CONFIRMAR PEDIDO
+// ═══════════════════════════════════════
+async function confirmOrder() {
+  const btn = document.getElementById('confirm-order-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Enviando…';
+
+  try {
+    let orderId;
+    try {
+      const res = await apiPost('/pedidos/pedidos', { id_usuario: currentUser.id });
+      orderId = res.mensagem?.match(/\d+/)?.[0];
+    } catch {
+      orderId = demoOrderId++;
+    }
+
+    for (const item of cart) {
+      try {
+        await apiPost(`/pedidos/pedido/adicionar-item/${orderId}`, {
+          quantidade:     item.qty,
+          sabor:          item.pizza.name,
+          tamanho:        item.size.id,
+          preco_unitario: item.price
+        });
+      } catch { /* modo demo */ }
+    }
+
+    // salva localmente (modo demo / backup)
+    const saved = JSON.parse(localStorage.getItem('Bella_Massa_orders')||'[]');
+    saved.unshift({
+      id: orderId, status:'PENDENTE',
+      preco: cart.reduce((s,i)=>s+i.total,0),
+      itens: cart.map(c=>({ sabor:c.pizza.name, tamanho:c.size.id, quantidade:c.qty, preco_unitario:c.price }))
+    });
+    localStorage.setItem('Bella_Massa_orders', JSON.stringify(saved));
+
+    cart = [];
+    renderCart();
+    toast('success', `🎉 Pedido #${orderId} confirmado!`);
+    showAppTab('my-orders');
+  } catch(e) {
+    toast('error', 'Erro ao confirmar pedido.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Confirmar pedido';
+  }
+}
+
+// ═══════════════════════════════════════
+//  MEUS PEDIDOS
+// ═══════════════════════════════════════
+async function loadOrders() {
+  const container = document.getElementById('orders-container');
+  container.innerHTML = `<div class="loading-center"><div class="spinner"></div><span>Carregando pedidos…</span></div>`;
+
+  let orders = [];
+  try {
+    orders = await apiFetch('/pedidos/listar/pedidos-usuario');
+  } catch {
+    orders = JSON.parse(localStorage.getItem('Bella_Massa_orders')||'[]');
+  }
+
+  if (!orders.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🍕</div>
+        <h3>Nenhum pedido ainda</h3>
+        <p>Que tal fazer o seu primeiro pedido?</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="orders-list">${orders.map(o=>orderCardHTML(o)).join('')}</div>`;
+}
+
+function orderCardHTML(o) {
+  const itemsHTML = (o.itens||[]).map(i=>`
+    <li class="order-item-row">
+      <span>${i.quantidade}x ${i.sabor} (${i.tamanho})</span>
+      <span>R$ ${(i.preco_unitario*i.quantidade).toFixed(2).replace('.',',')}</span>
+    </li>`).join('');
+
+  return `
+    <div class="order-card" id="order-card-${o.id}">
+      <div class="order-card-header" onclick="toggleOrder(${o.id})">
+        <div class="order-meta">
+          <span class="order-id">#${o.id}</span>
+          <span class="status-badge status-${o.status}">${statusIcon(o.status)} ${o.status}</span>
+        </div>
+        <span class="order-price">R$ ${(o.preco||0).toFixed(2).replace('.',',')}</span>
+      </div>
+      <div class="order-card-body" id="order-body-${o.id}">
+        <ul class="order-items-list">${itemsHTML}</ul>
+        <div class="order-actions">
+          ${o.status==='PENDENTE'?`<button class="btn btn-success btn-sm" onclick="finalizarPedido(${o.id})">✓ Finalizar</button>`:''}
+          ${o.status==='PENDENTE'?`<button class="btn btn-danger  btn-sm" onclick="cancelarPedido(${o.id})">✕ Cancelar</button>`:''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function statusIcon(s) { return {PENDENTE:'⏳',FINALIZADO:'✓',CANCELADO:'✕'}[s]||''; }
+function toggleOrder(id) { document.getElementById(`order-body-${id}`).classList.toggle('open'); }
+
+async function finalizarPedido(id) {
+  try { await apiPost(`/pedidos/pedido/finalizar/${id}`, {}); } catch {}
+  updateLocalStatus(id,'FINALIZADO');
+  toast('success',`Pedido #${id} finalizado!`);
+  loadOrders();
+}
+
+async function cancelarPedido(id) {
+  try { await apiPost(`/pedidos/pedido/cancelar/${id}`, {}); } catch {}
+  updateLocalStatus(id,'CANCELADO');
+  toast('error',`Pedido #${id} cancelado.`);
+  loadOrders();
+}
+
+function updateLocalStatus(id,status) {
+  const orders = JSON.parse(localStorage.getItem('Bella_Massa_orders')||'[]');
+  const o = orders.find(x=>x.id==id);
+  if(o) o.status = status;
+  localStorage.setItem('Bella_Massa_orders', JSON.stringify(orders));
+}
+
+// ═══════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  if (!email||!pass) return showFormError('Preencha todos os campos.');
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  hideFormError();
+
+  try {
+    const data = await apiPost('/auth/login', { email, senha: pass });
+    token = data.access_token;
+    localStorage.setItem('Bella_Massa_token', token);
+
+    // busca dados reais do usuário
+    const me = await apiFetch('/auth/me');
+    currentUser = { id: me.id, nome: me.nome, email: me.email, admin: me.admin };
+    localStorage.setItem('Bella_Massa_user', JSON.stringify(currentUser));
+
+    closeModal();
+    enterApp();
+    toast('success','Bem-vindo(a) de volta! 👋');
+  } catch(e) {
+    showFormError(e.message || 'E-mail ou senha incorretos.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Entrar na conta';
+  }
+}
+
+async function doRegister() {
+  const nome  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass  = document.getElementById('reg-pass').value;
+  if (!nome||!email||!pass) return showFormError('Preencha todos os campos.');
+  if (pass.length < 6)      return showFormError('Senha com pelo menos 6 caracteres.');
+
+  const btn = document.getElementById('register-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  hideFormError();
+
+  try {
+    await apiPost('/auth/criar_conta', { nome, email, senha:pass, ativo:true, admin:false });
+
+    const data = await apiPost('/auth/login', { email, senha:pass });
+    token = data.access_token;
+    localStorage.setItem('Bella_Massa_token', token);
+
+    const me = await apiFetch('/auth/me');
+    currentUser = { id:me.id, nome:me.nome, email:me.email, admin:me.admin };
+    localStorage.setItem('Bella_Massa_user', JSON.stringify(currentUser));
+
+    closeModal();
+    enterApp();
+    toast('success',`Conta criada! Bem-vindo(a), ${nome}! 🎉`);
+  } catch(e) {
+    showFormError(e.message || 'Erro ao criar conta. Tente outro e-mail.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Criar minha conta';
+  }
+}
+
+function enterApp() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('app').classList.add('active');
+
+  const nome = currentUser?.nome || 'você';
+  document.getElementById('welcome-name').textContent = `Olá, ${nome}! 👋`;
+
+  const initials = nome[0].toUpperCase();
+  document.getElementById('nav-actions').innerHTML = `
+    <div class="user-badge">
+      <div class="user-avatar">${initials}</div>
+      ${nome}
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="logout()">Sair</button>`;
+
+  renderPizzaSelect();
+  renderSizes();
+}
+
+function logout() {
+  token = null; currentUser = null;
+  localStorage.removeItem('Bella_Massa_token');
+  localStorage.removeItem('Bella_Massa_user');
+  document.getElementById('landing').classList.remove('hidden');
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('nav-actions').innerHTML = `
+    <button class="btn btn-ghost" onclick="openModal('login')">Entrar</button>
+    <button class="btn btn-primary" onclick="openModal('register')">Criar conta</button>`;
+  toast('success','Até logo! 👋');
+}
+
+// ═══════════════════════════════════════
+//  APP TABS
+// ═══════════════════════════════════════
+function showAppTab(tab) {
+  const isNew = tab==='new-order';
+  document.getElementById('tab-new-order').classList.toggle('hidden', !isNew);
+  document.getElementById('tab-my-orders').classList.toggle('hidden',  isNew);
+  document.querySelectorAll('.app-tab').forEach((t,i)=>
+    t.classList.toggle('active', isNew ? i===0 : i===1));
+  if (!isNew) loadOrders();
+}
+
+// ═══════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════
+function openModal(tab='login') {
+  document.getElementById('auth-overlay').classList.add('active');
+  switchTab(tab);
+}
+function closeModal() {
+  document.getElementById('auth-overlay').classList.remove('active');
+  hideFormError();
+}
+function switchTab(tab) {
+  const isLogin = tab==='login';
+  document.getElementById('form-login').classList.toggle('hidden',   !isLogin);
+  document.getElementById('form-register').classList.toggle('hidden', isLogin);
+  document.getElementById('tab-login').classList.toggle('active',    isLogin);
+  document.getElementById('tab-register').classList.toggle('active', !isLogin);
+  document.getElementById('modal-title').textContent = isLogin ? 'Bem-vindo de volta' : 'Criar conta';
+  document.getElementById('modal-sub').textContent   = isLogin ? 'Entre para fazer seu pedido' : 'Cadastre-se e peça agora';
+  hideFormError();
+}
+document.getElementById('auth-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+function showFormError(msg) { const el=document.getElementById('form-error'); el.textContent=msg; el.classList.add('show'); }
+function hideFormError()    { document.getElementById('form-error').classList.remove('show'); }
+
+// ═══════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════
+async function apiFetch(path, opts={}) {
+  const headers = { 'Content-Type':'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(API+path, {...opts, headers});
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.detail || `Erro ${res.status}`);
+  }
+  return res.json();
+}
+async function apiPost(path, body) { return apiFetch(path, { method:'POST', body:JSON.stringify(body) }); }
+
+// ═══════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════
+function toast(type, msg) {
+  const icons = { success:'✅', error:'❌', info:'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(()=>el.remove(), 4000);
+}
+</script>
+</body>
+</html>
